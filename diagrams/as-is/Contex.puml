@@ -1,0 +1,16 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Тёплый Дом - Диаграмма Контекста
+top to bottom direction
+
+Person(user, "User", "Пользователь системы")
+Person(technician, "Technician", "Настройщик системы")
+System(WarmHomeSystem, "Система 'Тёплый дом'", "Система контроля температуры дома")
+
+System_Ext(banking, "Банк", "Платёжная система")
+
+Rel(technician, WarmHomeSystem, "Подключает систему на месте")
+Rel(user, WarmHomeSystem, "Пользуется системой")
+Rel(user, banking, "Оплачивает услугу подключения")
+@enduml
