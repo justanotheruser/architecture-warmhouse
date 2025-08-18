@@ -1,0 +1,27 @@
+@startuml
+!include ../C4_Context.puml
+
+title Умный Дом - Диаграмма Контекста
+top to bottom direction
+
+Person(user, "User", "Пользователь системы")
+System(SmartHomeSystem, "Система 'Умный дом'", "Система контроля и мониторинга различных умных компонент")
+
+System_Ext(ip_hardware, "Умные компоненты с ip", "Компоненты, которые имеют свой внешний ip и подключаются к системе напрямую, а не через общий шлюз")
+System_Ext(hardware, "Умные компоненты", "Компоненты, которые подключаются через хаб, имеющий внешний ip")
+System_Ext(banking, "Банк", "Внешняя платёжная система")
+System_Ext(parts_market, "Каталог компонентов умного дома", "API для каталога поддерживаемых компонентов умного дома от партнёров")
+System_Ext(push_service, "Сервис пуш-уведомлений", "Внешние API для отправки пуш-уведомлений")
+
+Rel(user, SmartHomeSystem, "Регистрируется и пользуется системой")
+Rel(user, hardware, "Устанавливает и подключает к системе")
+Rel(user, ip_hardware, "Устанавливает и подключает к системе")
+Rel(hardware, SmartHomeSystem, "Отправляют данные")
+Rel(SmartHomeSystem, hardware, "Управляет")
+Rel(ip_hardware, SmartHomeSystem, "Отправляют данные")
+Rel(SmartHomeSystem, ip_hardware, "Управляет")
+Rel(SmartHomeSystem, banking, "Обработка платежей за подписку")
+Rel(SmartHomeSystem, parts_market, "Запрашивает каталог")
+Rel(SmartHomeSystem, push_service, "Посылает")
+Rel(push_service, user, "Получает")
+@enduml

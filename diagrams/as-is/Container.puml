@@ -9,16 +9,18 @@ System(WarmHomeSystem, "Система 'Тёплый дом'", "Система �
 
 Container_Boundary(WarmHomeSystem, "") {
     Container(Hardware, "Система отопления", "Железяки", "Датчики температуры, управляемые котлы, тёплые полы")
-    Container(InternetGate, "Интернет-шлюз", "Arduino, C", "Имеет ip-адрес и подключен ко всем сенсорам и термостатам")
+    Container(InternetGate, "Интернет-шлюз", "Arduino, C", "Имеет внешний ip-адрес и подключен ко всем сенсорам и термостатам")
     Container(TemperatureService, "Сервис данных о температуре", "Python, Flask", "Умеет запрашивать данные с сенсоров (потому что я использую Flask в задании 5 для простоты")
     Container(BoilerService, "Сервис управления температурой", "Python, Flask", "Умеет управлять котлами/тёплым полом")
     Container(WarmHouseApi, "Warm House Api", "Go, Gin", "backend-for-frontend для мобильного приложения")
+    Container(Database, "Database", "PostgresSQL", "Database for users & sensors info")
     Container(MobileApp, "Мобильное приложение", "Android, Java", "")
 
 }
 
 Rel(user, MobileApp, "Использует приложение")
 Rel(MobileApp, WarmHouseApi, "Делает API вызовы к")
+Rel(WarmHouseApi, Database, "Читает и пишет")
 Rel(WarmHouseApi, BoilerService, "Делает API вызовы к")
 Rel(WarmHouseApi, TemperatureService, "Делает API вызовы к")
 Rel(BoilerService, InternetGate, "Делает вызовы к")
