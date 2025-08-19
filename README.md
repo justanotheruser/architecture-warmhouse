@@ -60,20 +60,6 @@
 
 ### 5. Визуализация контекста системы — диаграмма С4
 
-Добавьте сюда диаграмму контекста в модели C4.
-
-Чтобы добавить ссылку в файл Readme.md, нужно использовать синтаксис Markdown. Это делают так:
-
-```markdown
-[Текст ссылки](URL)
-```
-
-Замените `Текст ссылки` текстом, который хотите использовать для ссылки. Вместо `URL` вставьте адрес, на который должна вести ссылка. Например:
-
-```markdown
-[Посетите Яндекс](https://ya.ru/)
-```
-
 [System Context](diagrams/as-is/Contex.svg)
 [Container](diagrams/as-is/Container.svg)
 
@@ -81,27 +67,77 @@
 
 В этом задании вам нужно предоставить только диаграммы в модели C4. Мы не просим вас отдельно описывать получившиеся микросервисы и то, как вы определили взаимодействия между компонентами To-Be системы. Если вы правильно подготовите диаграммы C4, они и так это покажут.
 
-**Диаграмма контейнеров (Containers)**
-
-Добавьте диаграмму.
-
-**Диаграмма компонентов (Components)**
-
-Добавьте диаграмму для каждого из выделенных микросервисов.
-
-**Диаграмма кода (Code)**
-
-Добавьте одну диаграмму или несколько.
+![alt text](diagrams/to-be/Context.svg "Диаграмма контекста")
+![alt text](diagrams/to-be/Container.svg "Диаграмма контейнеров")
+![alt text](diagrams/to-be/UserApiComponent.svg "Диаграмма компонент UserAPI")
 
 # Задание 3. Разработка ER-диаграммы
 
-Добавьте сюда ER-диаграмму. Она должна отражать ключевые сущности системы, их атрибуты и тип связей между ними.
+```mermaid
+erDiagram
+user {
+	int id
+	text name
+	text surname
+	text address
+	bool is_active
+	datetime next_payment
+	int card_id fk
+}
+
+device {
+	int id
+	int user_id fk
+	text name
+	text model
+	json attributes_schema
+	json commands_schema
+	json attributes
+}
+
+capability {
+	text name pk
+	text description
+}
+
+scenario {
+	int id
+	int user_id fk
+	text name
+	text description
+	json condition
+	json action
+	bool is_active
+}
+
+card {
+	text cardholder_name
+	int pan
+	date expiration_date
+	text service_code
+}
+
+	user || -- o{ device : has
+	user || -- || card : has
+	device }o -- |{ capability : has
+	user || -- o{ scenario : creates
+	scenario }o -- o{ device : "conditioned on"
+	scenario }o -- o{ device : affects
+```
 
 # Задание 4. Создание и документирование API
 
 ### 1. Тип API
 
-Укажите, какой тип API вы будете использовать для взаимодействия микросервисов. Объясните своё решение.
+#### User API
+
+Для взаимодействия с мобильным приложением я использую 3 различных вида API:
+
+- Async GraphQL для получения информации о датчиках/устройствах, их возможностях и текущем состоянии, а также для изменении их состояния (для команд)
+- REST API для редактирования профиля и создания сценариев
+- Простое AsyncAPI/websocket для отправки информации с датчиков в режиме реального времени
+
+**Async GraphQL**
 
 ### 2. Документация API
 

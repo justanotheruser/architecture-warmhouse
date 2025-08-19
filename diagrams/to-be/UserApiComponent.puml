@@ -1,0 +1,48 @@
+@startuml
+!include ../C4_Component.puml
+title User API Service Component Diagram
+
+top to bottom direction
+
+Container_Boundary(SmartHomeSystem, "SmartHome System") {
+  Container(UserAPI, "Сервис User API", "Python, FastAPI", "Handles user interactions")
+  Container(DeviceService, "Сервис устройств", "Python, FastAPI", "Сервис для регистрации и хранения информации об устройствах")
+  Container(TimeSeriesDB, "Time Series DB", "InfluxDB", "БД для истории показателей сенсоров")
+  Container(UserService, "Сервис Пользователей", "Python, FastAPI", "Сервис управления учётной записью")
+  Container(MobileApp, "Мобильное приложение", "Android/iOS, Kotlin", "Приложение для контроля и управления умным домом")
+  Container(InMemoryDeviceStateDB, "БД с текущим состоянием умного дома", "Redis Cluster")
+  Container(CommandMessageBroker, "Очередь команд", "RabbitMQ")
+  Container(SmartHomeLogic, "Сервис логики умного дома", "Go, Gin, paho.mqtt")
+}
+
+Container(UserAPI, "Сервис User API", "Python, FastAPI, Strawberry") {
+  Component(GraphQLAPI, "GraphQL API", "Предоставляет эндпойнт для GraphQL-запросов")
+  Component(WebsocketEndpoint, "Websocket Endpoint", "Эндпойнт для подписок на realtime-данные")
+  Component(DeviceController, "Device Controller", "Позволяет узнавать и управлять состоянием устройств умного дома")
+  Component(DeviceRealTimeDataController, "Device Realtime Data Controller", "Позволяет подписываться и получать данные с устройства в режиме реального времени без необходимости опрашивать базу")
+  Component(RestAPI, "REST API", "API для управления биллингом и сценариями, получения отчётов")
+  Component(UserController, "User Controller", "Позволяет управлять учётной записью/настройками оплаты")
+  Component(ScenarioController, "Scenario Controller", "Создание и редактирование сценариев умного дома")
+  Component(ServiceLayer, "Service Layer", "Слой бизнес-логики")
+  Component(ReportController, "Report Controller", "Создание отчётов")
+}
+
+Rel(MobileApp, GraphQLAPI, "Запрашивает и меняет состояние устройств", "async GraphQL/https")
+Rel(GraphQLAPI, DeviceController, "Использует")
+Rel(DeviceController, DeviceService, "Читает возможности устройств и текущее состояние", "GraphQL/http")
+Rel(DeviceController, CommandMessageBroker, "Посылает команды", "AMQP")
+
+Rel(MobileApp, WebsocketEndpoint, "Подписывается на обновления", "websockets")
+Rel(WebsocketEndpoint, DeviceRealTimeDataController, "Использует")
+Rel(DeviceRealTimeDataController, InMemoryDeviceStateDB, "Получает обновления", "pub/sub")
+
+Rel(MobileApp, RestAPI, "Управляет биллингом, сценариями")
+Rel(RestAPI, ServiceLayer, "Использует")
+Rel(ServiceLayer, UserController, "Использует")
+Rel(ServiceLayer, ScenarioController, "Использует")
+Rel(UserController, UserService, "Читает и редактирует профиль, валидирует jwt", "REST/http")
+Rel(ScenarioController, SmartHomeLogic, "Управляет сценариями")
+Rel(ServiceLayer, ReportController, "Использует")
+Rel(ReportController, TimeSeriesDB, "Читает исторические данные")
+
+@enduml

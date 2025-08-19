@@ -20,6 +20,7 @@ Container_Boundary(SmartHomeSystem, "") {
     Container(MobileApp, "Мобильное приложение", "Android/iOS, Kotlin", "Приложение для контроля и управления умным домом")
     Container(UserAPI, "Сервис User API", "Python, FastAPI", "Backend-for-frontend")
     Container(DeviceService, "Сервис устройств", "Python, FastAPI", "Сервис для регистрации и хранения информации об устройствах")
+    Container(InMemoryDeviceStateDB, "БД с текущим состоянием умного дома", "Redis Cluster")
     Container(DeviceDB, "База данных устройств", "PostgresSQL")
     Container(TelemetryLogger, "Telemetry logger", "Go, paho.mqtt", "Записывает данные с сенсоров в БД")
     Container(TimeSeriesDB, "Time Series DB", "InfluxDB", "БД для истории показателей сенсоров")
@@ -44,17 +45,20 @@ Rel(TelemetryLogger, TimeSeriesDB, "Пишет")
 Rel(DeviceMessageBroker, SmartHomeLogic, "Посылает данные")
 Rel(SmartHomeLogic, DeviceMessageBroker, "Команды, вызванные триггерами/расписанием/прямым запросом")
 
-Rel(MobileApp, UserAPI, "Запрашивает данные", "https, GraphQL")
-Rel(UserAPI, DeviceService, "Читает список устройств и возможности")
-Rel(UserAPI, TimeSeriesDB, "Читает исторические данные")
-Rel(UserAPI, UserService, "Читает профиль")
+Rel(MobileApp, UserService, "Авторизуется (получает jwt-токен)")
 
-Rel(MobileApp, UserAPI, "Посылает команды", "https, jsonRPC")
+Rel(MobileApp, UserAPI, Запрашивает и меняет состояние устройств", "async GraphQL/https")
+Rel(MobileApp, UserAPI, "Управляет биллингом, сценариями", "Rest/http")
+Rel(UserAPI, DeviceService, "Читает возможности устройств и текущее состояние")
+Rel(UserAPI, TimeSeriesDB, "Читает исторические данные")
+Rel(UserAPI, UserService, "Читает профиль, валидирует jwt")
+Rel(UserAPI, SmartHomeLogic, "Управляет сценариями")
+
 Rel(UserAPI, CommandMessageBroker, "Посылает команды")
 Rel(CommandMessageBroker, SmartHomeLogic, "Посылает команды")
 
 Rel(MobileApp, UserAPI, "Подписывается на обновления", "websockets")
-Rel(DeviceMessageBroker, UserAPI, "Получает обновления")
+Rel(UserAPI, InMemoryDeviceStateDB, "Получает обновления", "pub/sub")
 
 Rel(UserService, UserDB, "Использует")
 Rel(UserService, banking, "Проводит оплату")
@@ -62,6 +66,9 @@ Rel(UserService, SmartHomeLogic, "Отключает сценарии неопл
 
 Rel(SmartHomeLogic, SmartHomeDB, "Использует")
 Rel(SmartHomeLogic, push_service, "Посылает")
+
+Rel(DeviceMessageBroker, DeviceService, "Посылает данные")
+Rel(DeviceService, InMemoryDeviceStateDB, "Пишет/читает")
 Rel(DeviceService, DeviceDB, "Использует")
 
 Rel(user, MobileApp, "Использует")
