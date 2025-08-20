@@ -7,6 +7,41 @@ from flask.json import jsonify
 app = Flask(__name__)
 
 
+import random
+
+from flask import Flask, request
+from flask.json import jsonify
+
+
+app = Flask(__name__)
+
+
+@app.get("/temperature/<sensor_id>")
+def get_temperature_for_sensor(sensor_id):
+    location = request.args.get("location")
+    match sensor_id:
+        case "1":
+            location = "Living Room"
+        case "2":
+            location = "Bedroom"
+        case "3":
+            location = "Kitchen"
+        case _:
+            location = "Unknown"
+
+    return jsonify(
+        {
+            "value": random.random() * 30 + 15,
+            "unit": "celcius",
+            "location": location,
+            "status": "ok",
+            "sensor_id": sensor_id,
+            "sensor_type": "temperatureMeasurement",
+            "description": None,
+        }
+    )
+
+
 @app.get("/temperature")
 def get_temperature():
     location = request.args.get("location")

@@ -84,7 +84,7 @@
                 "body": {
                     "mode": "raw",
                     "raw": "{\n    \"name\": \"Living Room Temperature\",\n    \"type\": \"temperature\",\n    \"location\": \"Living Room\",\n    \"unit\": \"°C\"\n}"
-                },
+                },  
                 "url": {
                     "raw": "http://localhost:8080/api/v1/sensors",
                     "protocol": "http",
