@@ -16,27 +16,26 @@ Container_Boundary(SmartHomeSystem, "SmartHome System") {
 }
 
 Container(UserAPI, "Сервис User API", "Python, FastAPI, Strawberry") {
-  Component(GraphQLAPI, "GraphQL API", "Предоставляет эндпойнт для GraphQL-запросов")
   Component(WebsocketEndpoint, "Websocket Endpoint", "Эндпойнт для подписок на realtime-данные")
   Component(DeviceController, "Device Controller", "Позволяет узнавать и управлять состоянием устройств умного дома")
   Component(DeviceRealTimeDataController, "Device Realtime Data Controller", "Позволяет подписываться и получать данные с устройства в режиме реального времени без необходимости опрашивать базу")
-  Component(RestAPI, "REST API", "API для управления биллингом и сценариями, получения отчётов")
+  Component(RestAPI, "REST API", "API для управления устройствами, правилами, настройки биллинга")
   Component(UserController, "User Controller", "Позволяет управлять учётной записью/настройками оплаты")
   Component(ScenarioController, "Scenario Controller", "Создание и редактирование сценариев умного дома")
   Component(ServiceLayer, "Service Layer", "Слой бизнес-логики")
   Component(ReportController, "Report Controller", "Создание отчётов")
 }
 
-Rel(MobileApp, GraphQLAPI, "Запрашивает и меняет состояние устройств", "async GraphQL/https")
-Rel(GraphQLAPI, DeviceController, "Использует")
-Rel(DeviceController, DeviceService, "Читает возможности устройств и текущее состояние", "GraphQL/http")
-Rel(DeviceController, CommandMessageBroker, "Посылает команды", "AMQP")
 
 Rel(MobileApp, WebsocketEndpoint, "Подписывается на обновления", "websockets")
 Rel(WebsocketEndpoint, DeviceRealTimeDataController, "Использует")
 Rel(DeviceRealTimeDataController, InMemoryDeviceStateDB, "Получает обновления", "pub/sub")
+Rel(DeviceRealTimeDataController, DeviceController, "Использует")
 
-Rel(MobileApp, RestAPI, "Управляет биллингом, сценариями")
+Rel(MobileApp, RestAPI, "Управляет устройствами, правилами, биллингом")
+Rel(RestAPI, DeviceController, "Использует")
+Rel(DeviceController, DeviceService, "Читает возможности устройств и текущее состояние", "Rest/http")
+Rel(DeviceController, CommandMessageBroker, "Посылает команды", "AMQP")
 Rel(RestAPI, ServiceLayer, "Использует")
 Rel(ServiceLayer, UserController, "Использует")
 Rel(ServiceLayer, ScenarioController, "Использует")
