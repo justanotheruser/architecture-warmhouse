@@ -1,0 +1,77 @@
+@startuml
+!include ../C4_Container.puml
+
+top to bottom direction
+skinparam maxMessageSize 0
+title Умный Дом - диаграмма контейнера
+
+Person(user, "User", "Пользователь системы")
+System(SmartHomeSystem, "Система 'Умный дом'", "Система контроля и мониторинга умных устройств")
+
+System_Ext(ip_hardware, "Умные компоненты с ip", "Компоненты, которые имеют свой внешний ip и подключаются к системе напрямую, а не через общий шлюз")
+System_Ext(hardware, "Умные компоненты", "Компоненты, которые подключаются через хаб, имеющий внешний ip")
+System_Ext(banking, "Банк", "Внешняя платёжная система")
+System_Ext(parts_market, "Каталог компонентов умного дома", "API для каталога поддерживаемых компонентов умного дома от партнёров")
+System_Ext(push_service, "Сервис пуш-уведомлений", "Внешние API для отправки пуш-уведомлений")
+
+
+Container_Boundary(SmartHomeSystem, "") {
+    Container(DeviceMessageBroker, "Брокер сообщений", "EMQX", "Топики для телеметрии и команд")
+    Container(MobileApp, "Мобильное приложение", "Android/iOS, Kotlin", "Приложение для контроля и управления умным домом")
+    Container(UserAPI, "Сервис User API", "Python, FastAPI", "Backend-for-frontend")
+    Container(DeviceService, "Сервис устройств", "Python, FastAPI", "Сервис для регистрации и хранения информации об устройствах")
+    Container(InMemoryDeviceStateDB, "БД с текущим состоянием умного дома", "Redis Cluster")
+    Container(DeviceDB, "База данных устройств", "PostgresSQL")
+    Container(TelemetryLogger, "Telemetry logger", "Go, paho.mqtt", "Записывает данные с сенсоров в БД")
+    Container(TimeSeriesDB, "Time Series DB", "InfluxDB", "БД для истории показателей сенсоров")
+    Container(InternetGate, "Интернет-шлюз", "Raspberry Pi, C, Zigbee", "Имеет внешний ip-адрес и подключен ко всем компонентам, у которых нет внешнего ip")
+    Container(UserService, "Сервис Пользователей", "Python, FastAPI", "Сервис управления учётной записью")
+    Container(UserDB, "База данных профилей", "PostgresSQL")
+    Container(SmartHomeLogic, "Сервис логики умного дома", "Go, Gin, paho.mqtt")
+    Container(CommandMessageBroker, "Очередь команд", "RabbitMQ")
+    Container(SmartHomeDB, "База данных сценариев", "PostgresSQL")
+}
+
+Rel(hardware, InternetGate, "Подключаются к")
+Rel(MobileApp, ip_hardware, "Выполняет онбоардинг")
+Rel(MobileApp, DeviceService, "Регистрирует устройство")
+
+Rel(ip_hardware, DeviceMessageBroker, "Посылают данные", "MQPP")
+Rel_Up(InternetGate, DeviceMessageBroker, "Посылает данные", "MQPP")
+Rel_Up(DeviceMessageBroker, ip_hardware, "Посылает команды", "MQPP")
+Rel(DeviceMessageBroker, InternetGate, "Посылает команды", "MQPP")
+Rel(DeviceMessageBroker, TelemetryLogger, "Посылает данные", "MQPP")
+Rel(TelemetryLogger, TimeSeriesDB, "Пишет")
+Rel(DeviceMessageBroker, SmartHomeLogic, "Посылает данные")
+Rel(SmartHomeLogic, DeviceMessageBroker, "Команды, вызванные триггерами/расписанием/прямым запросом")
+
+Rel(MobileApp, UserService, "Авторизуется (получает jwt-токен)")
+
+Rel(MobileApp, UserAPI, "Запрашивает и меняет состояние устройств", "Rest/https")
+Rel(UserAPI, DeviceService, "Читает возможности устройств и текущее состояние")
+Rel(UserAPI, TimeSeriesDB, "Читает исторические данные")
+Rel(UserAPI, UserService, "Читает профиль, валидирует jwt")
+Rel(UserAPI, SmartHomeLogic, "Управляет сценариями")
+
+Rel(UserAPI, CommandMessageBroker, "Посылает команды")
+Rel(CommandMessageBroker, SmartHomeLogic, "Посылает команды")
+
+Rel(MobileApp, UserAPI, "Подписывается на обновления", "websockets")
+Rel(UserAPI, InMemoryDeviceStateDB, "Получает обновления", "pub/sub")
+
+Rel(UserService, UserDB, "Использует")
+Rel(UserService, banking, "Проводит оплату")
+Rel(UserService, SmartHomeLogic, "Отключает сценарии неоплаченных пользователей")
+
+Rel(SmartHomeLogic, SmartHomeDB, "Использует")
+Rel(SmartHomeLogic, push_service, "Посылает")
+
+Rel(DeviceMessageBroker, DeviceService, "Посылает данные")
+Rel(DeviceService, InMemoryDeviceStateDB, "Пишет/читает")
+Rel(DeviceService, DeviceDB, "Использует")
+
+Rel(user, MobileApp, "Использует")
+Rel(push_service, user, "Присылают")
+Rel(MobileApp, parts_market, "Читает каталог")
+
+@enduml

@@ -192,3 +192,6 @@ build/
 
 tmp/
 task-*
+
+.venv/
+__pycache__
